@@ -27,39 +27,73 @@ ___luacode___
   Disparo= {}
   Disparo.__index = Disparo
   
- function Disparo.new(x,y)
+ function Disparo.new(x,y, velocidad_x,
+ velocidad_y,direccion)
   local instance = setmetatable({},
   Disparo)
   instance.x = x
   instance.y = y
+  instance.velocidad_x = velocidad_x
+  instance.velocidad_y = velocidad_y
+  instance.direccion = direccion
  return instance
   end
   
   sw,sh = screenSize()
-  shot = Disparo.new(sw/12+12, sh-20)
 
-  puedeDisparar = true
-  TiempoDisparoMax = 10
-  timerDisparo = TiempoDisparoMax
+balas = {}
 
- balas = {}
+balas02={}
 
- nuevaBala={}
+function n_bala()  
+nuevaBala= {}
+
+nuevaBala02={}
+
+ os.time()
+ shot_x = math.random(sw/12+12,sw-12)
+
+ shot_x_min, shot_x_max =shot_x<sw/2,
+ shot_x> sw/2
+ 
+condicion=(shot_x< sw/2)
+ and shot_x_min or 
+ shot_x_max
+ 
+if shot_x_min then 
+
+local mini = shot_x  
+
+shot = Disparo.new(mini, sh-20,3.5,-3,
+1)
  nuevaBala = {
  
- x= shot.x,
- y=shot.y
+ x= mini,
+ y=shot.y,
+ velocidad_x = shot.velocidad_x,
+ velocidad_y = shot.velocidad_y,
+ direccion = shot.direccion
  }
 
  table.insert(balas,nuevaBala)
+elseif shot_x_max then 
 
- if timerDisparo < 0 then
-  puedeDisparar = true
- else
-  puedeDisparar = false
-  timerDisparo = timerDisparo -1
- end
- 
+local maxi=shot_x
+
+shot02 = Disparo.new(maxi,sh-20,3.5,
+-3,1)
+nuevaBala02 = {
+
+x= maxi, 
+y= shot02.y,
+velocidad_x= shot02.velocidad_x,
+velocidad_y = shot02.velocidad_y,
+direccion = shot02.direccion 
+}
+
+table.insert(balas02, nuevaBala02)
+end
+end 
 -----------------------------------------------
 function _init()
 
@@ -111,77 +145,86 @@ return {
   (my<=self.buton_2y + self.height)then
   color(3)
   rect(xw-3,yh+20-3,50,10)
-
-
   end
   end
  end
 }
 end
+-----------------------------------------------------------------
 
+function H()
+if game.state["running"]then
+do
+for i = #balas,1,-1 do
+  if shot_x_min then
+  balas[i].x= balas[i].x +
+  balas[i].velocidad_x
+  
+  balas[i].y = balas[i].y+
+  balas[i].velocidad_y
+ end
+end
+end
+do
+for i=#balas02,1,-1 do
+if shot_x_max then
+ balas02[i].x = balas02[i].x-
+ balas02[i].velocidad_x
+ 
+ balas02[i].y = balas02[i].y+
+ balas02[i].velocidad_y
 
-function buton_restart(func,buton_color,
+end
+end
+end
+elseif game.state["menu"]then
+
+end
+end
+----------------------------------------------------------------
+function buton_restart(buton_color,
  text_color, width, height)
   mx , my = getMPos()
  return {
- func= func or function() print("none")end,
- text_color=text_color or {r=0,g=0,b=0},
- buton_color = buton_color or {r=1,g=1,b=1},
- width= width or 100,
- height = height or 100,
- text= "No Text",
- buton_x = 0,
- buton_y= 0,
- text_x=0,
- text_y=0,
+
+  text_color=text_color or {r=0,g=0,b=0},
+  buton_color = buton_color or {r=1,g=1,b=1},
+  width= width or 100,
+  height = height or 100,
+  text= "No Text",
+  buton_x = 0,
+  buton_y= 0,
+  text_x=0,
+  text_y=0,
   
  draw = function (self, text, buton_x,
- buton_y, text_x, text_y)
+  buton_y, text_x, text_y)
  
- self.text= text or self.text
- self.buton_x = buton_x or self.buton_x
- self.buton_y = buton_y or self.buton_y
+  self.text= text or self.text
+  self.buton_x = buton_x or self.buton_x
+  self.buton_y = buton_y or self.buton_y
 
    rect(self.buton_x, self.buton_y, 
   self.width, self.height)
   end,
   
   checkPressed= function (self,mx,my )
-  
+ 
   if(mx>=self.buton_x)and
   (mx<=self.buton_x + self.width) then
   if(my>= self.buton_y)and
   (my<= self.buton_y + self.height)then
-  Presion = true
-  self.func()
+
+  n_bala()
   end
   end
   
   end
  }
 end
-----------------------------------------------------------
-function H()
-if game.state["running"]and Presion then
-velocidad = 3
-for i= #balas, 1, -1 do
-balas[i].y = balas[i].y -velocidad
-if balas[i].y< 0 then
- table.remove(balas,i)
-end
-end
-elseif game.state["menu"]then
-velocidad = 0 
-for i = #balas,1,-1 do
-balas[i].y = balas[i].y -velocidad
-end
-end
-
-end
-
 ---------------------------------------------------------
  buttons.restart.restart_01=
- buton_restart(H,{r=buttons.colors["red"],
+ buton_restart({r=buttons.colors["red"],
  g=buttons.colors["green"],
  b= buttons.colors["blue"]},
  {r=0,g=0,b=0},40,10 ) 
@@ -191,10 +234,11 @@ end
 
 function _update60()
 
-sw,sh = screenSize()
-mx,my = getMPos()
+ sw,sh = screenSize()
+ mx,my = getMPos()
 
 H()
+
 end
 
 function _mousepressed(mx,my)
@@ -219,8 +263,13 @@ function _mousepressed(mx,my)
  game.state["running"]=true
 end
 
- buttons.restart.restart_01:checkPressed(mx,my)
+buttons.restart.restart_01:checkPressed(mx,my)
+
 end
+
+
+
+
 -----------------------------------------------------
 
 function _draw()
@@ -247,13 +296,14 @@ elseif game.state["running"]then
   color(7)
 
   print("Restart",sw/12+2,sh-10)
-
- 
+  
   for i,bala in ipairs(balas)do
    Sprite(1,bala.x,bala.y)
   end
   
-  
+  for i, bala02 in ipairs(balas02)do
+   Sprite(1,bala02.x, bala02.y)
+  end
 end
 
 end
