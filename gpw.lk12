@@ -41,14 +41,14 @@ ___luacode___
   
   sw,sh = screenSize()
 
-balas = {}
+ balas = {}
 
-balas02={}
+ balas02={}
 
 function n_bala()  
-nuevaBala= {}
+ nuevaBala= {}
 
-nuevaBala02={}
+ nuevaBala02={}
 
  os.time()
  shot_x = math.random(sw/12+12,sw-12)
@@ -56,16 +56,16 @@ nuevaBala02={}
  shot_x_min, shot_x_max =shot_x<sw/2,
  shot_x> sw/2
  
-condicion=(shot_x< sw/2)
- and shot_x_min or 
- shot_x_max
+ condicion=(shot_x< sw/2)
+  and shot_x_min or 
+  shot_x_max
  
 if shot_x_min then 
 
 local mini = shot_x  
 
-shot = Disparo.new(mini, sh-20,3.5,-3,
-1)
+shot = Disparo.new(mini, sh-20,1,
+-1.5,1)
  nuevaBala = {
  
  x= mini,
@@ -80,8 +80,8 @@ elseif shot_x_max then
 
 local maxi=shot_x
 
-shot02 = Disparo.new(maxi,sh-20,3.5,
--3,1)
+shot02 = Disparo.new(maxi,sh-20,1,
+-1.5,1)
 nuevaBala02 = {
 
 x= maxi, 
@@ -154,7 +154,8 @@ end
 
 function H()
 if game.state["running"]then
-do
+
+for i = #balas,1,-1 do
 for i = #balas,1,-1 do
   if shot_x_min then
   balas[i].x= balas[i].x +
@@ -163,9 +164,14 @@ for i = #balas,1,-1 do
   balas[i].y = balas[i].y+
   balas[i].velocidad_y
  end
+ 
 end
+break
 end
-do
+
+
+
+for i=#balas02,1,-1 do
 for i=#balas02,1,-1 do
 if shot_x_max then
  balas02[i].x = balas02[i].x-
@@ -173,10 +179,11 @@ if shot_x_max then
  
  balas02[i].y = balas02[i].y+
  balas02[i].velocidad_y
+end
+end
+break
+end
 
-end
-end
-end
 elseif game.state["menu"]then
 
 end
@@ -218,7 +225,6 @@ function buton_restart(buton_color,
   n_bala()
   end
   end
-  
   end
  }
 end
@@ -238,8 +244,24 @@ function _update60()
  mx,my = getMPos()
 
 H()
-
 end
+function _update()
+for i=#balas,1,-1 do
+ if balas[i].y <= sh/2-20 then
+  balas[i].velocidad_x = 0
+  balas[i].velocidad_y=0 
+
+ end
+end
+
+for i=#balas02,1,-1 do
+ if balas02[i].y<=sh/2-20 then
+ balas02[i].velocidad_x= 0
+ balas02[i].velocidad_y=0
+ end
+end
+end
+
 
 function _mousepressed(mx,my)
  xw=10
@@ -267,7 +289,9 @@ buttons.restart.restart_01:checkPressed(mx,my)
 
 end
 
+function _mousereleased()
 
+end
 
 
 -----------------------------------------------------
@@ -298,7 +322,7 @@ elseif game.state["running"]then
   print("Restart",sw/12+2,sh-10)
   
   for i,bala in ipairs(balas)do
-   Sprite(1,bala.x,bala.y)
+   Sprite(1,bala.x,bala.y)   
   end
   
   for i, bala02 in ipairs(balas02)do
